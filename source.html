@@ -1,0 +1,87 @@
+app = customtkinter.CTk()
+app.title("READ TIKTOK CMT | BY TENICA")
+app.geometry("350x380")
+
+running = True
+
+client = None
+
+def on_comment(event: CommentEvent):
+        frame_text_box.configure(state = "normal")
+        frame_text_box.insert(customtkinter.END, f"{event.user.nickname} -> {event.comment}\n")
+        if any(word in event.comment for word in list_text):
+             playsound(file_sound)
+        frame_text_box.configure(state = "disabled")
+
+def run_client():
+        global id_room
+        frame_text_box.configure(state = "normal")
+        frame_text_box.insert(customtkinter.END, f'Connected to Room: {link_live.get().replace("https://www.tiktok.com/@","").replace("/live","")}\n')
+        frame_text_box.configure(state = "disabled")
+        client.run()
+
+def stop():
+    global client
+    if client is not None:
+        frame_text_box.configure(state = "normal")
+        frame_text_box.insert(customtkinter.END, f'Stopped connecting to Room: {link_live.get().replace("https://www.tiktok.com/@","").replace("/live","")}\n')
+        frame_text_box.configure(state = "disabled")
+        client.stop()
+        client = None
+
+def start():
+    global stream
+    try:
+        unique_id = link_live.get()
+        global client
+        client = TikTokLiveClient(unique_id=unique_id)
+        client.on("comment", on_comment)
+        threading.Thread(target=run_client).start()
+    except:
+        CTkMessagebox(message="LINK IS ERROR OR LIVE IS STOPPED",
+                  icon="warning", option_1=("OK"),option_2=("CANCEL"),title="ADMIN TENICA")
+
+def open_file():
+    global file_sound
+    from tkinter import filedialog
+    file_sound = filedialog.askopenfilename(title="Choose sound file")
+    frame_text_box.configure(state = "normal")
+    frame_text_box.insert(customtkinter.END, f'Import sound file: {file_sound}\n')
+    frame_text_box.configure(state = "disabled")
+
+list_text = []
+
+def open_text():
+    global list_text
+    from tkinter import filedialog
+    file_text_path = filedialog.askopenfilename(title="Choose text file")
+    frame_text_box.configure(state = "normal")
+    frame_text_box.insert(customtkinter.END, f'Import text file: {file_text_path}\n')
+    list_text = open(file_text_path, "r", encoding="utf-8").readlines()
+    list_text = [line.strip("\n") for line in list_text]
+    print(list_text)
+    frame_text_box.configure(state = "disabled")
+
+link_live = customtkinter.CTkEntry(app, width = 310)
+link_live.grid(row = 0, column = 0, padx = 20, pady = (20, 10))
+
+button_frame = customtkinter.CTkFrame(app, width = 260, height= 50)
+button_frame.grid(row = 2, column = 0, pady = 10)
+
+start_button = customtkinter.CTkButton(button_frame, width = 60, height = 50, text = 'Start', command=start)
+start_button.grid(row = 0, column = 1, padx = (0,0))
+
+stop_button = customtkinter.CTkButton(button_frame, width = 60, height = 50, text = 'Stop', command=stop)
+stop_button.grid(row = 0, column = 2, padx = (10,10))
+
+file_button = customtkinter.CTkButton(button_frame, width = 60, height = 50, text = 'Choose File',command=open_file)
+file_button.grid(row = 0, column = 3, padx = (0,0))
+
+file_text = customtkinter.CTkButton(button_frame, width = 70, height = 50, text = 'File Text',command=open_text)
+file_text.grid(row = 0, column = 4, padx = (10,0))
+
+frame_text_box = customtkinter.CTkTextbox(app, width = 300, height= 220)
+frame_text_box.grid(row = 4, column = 0, pady = 10)
+frame_text_box.configure(state = "disabled")
+
+app.mainloop()
